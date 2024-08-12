@@ -43,14 +43,12 @@ export default createStore({
       state.token = token;
       state.role_id = role_id;
       localStorage.setItem("token", token);
-      localStorage.setItem("role_id", role_id);
     },
 
     clearToken(state) {
       state.token = "";
       state.role_id = null;
       localStorage.removeItem("token");
-      localStorage.removeItem("role_id");
     },
     clearUsers(state) {
       state.users = [];

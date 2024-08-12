@@ -1,6 +1,10 @@
 <template>
   <div>
     <h1>Inventories</h1>
+
+    <!-- Search Bar Component -->
+    <SearchBar @search="handleSearch" />
+
     <button @click="showAddModal = true" class="add-button">
       Add Inventory
     </button>
@@ -20,19 +24,19 @@
     />
 
     <ul>
-      <li v-for="inventorie in inventories" :key="inventorie.id">
-        <h2>Inventory Id: {{ inventorie.id }}</h2>
-        <p><strong>Capacity:</strong> {{ inventorie.capacity }}</p>
-        <p><strong>Current Stock:</strong> {{ inventorie.current_stock }}</p>
+      <li v-for="inventory in filteredInventories" :key="inventory.id">
+        <h2>Inventory Id: {{ inventory.id }}</h2>
+        <p><strong>Capacity:</strong> {{ inventory.capacity }}</p>
+        <p><strong>Current Stock:</strong> {{ inventory.current_stock }}</p>
         <p>
           <strong>Location:</strong> <br /><br />
-          {{ inventorie.location }}
+          {{ inventory.location }}
         </p>
         <div class="card-buttons">
-          <button @click="editInventory(inventorie)" class="edit-button">
+          <button @click="editInventory(inventory)" class="edit-button">
             Edit
           </button>
-          <button @click="deleteInventory(inventorie.id)" class="delete-button">
+          <button @click="deleteInventory(inventory.id)" class="delete-button">
             Delete
           </button>
         </div>
@@ -46,11 +50,13 @@ import { ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import AddInventoryModal from "./AddInventoryModal.vue";
 import EditInventoryModal from "./EditInventoryModal.vue";
+import SearchBar from "./SearchBar.vue";
 
 export default {
   components: {
     AddInventoryModal,
     EditInventoryModal,
+    SearchBar,
   },
   setup() {
     const store = useStore();
@@ -59,9 +65,27 @@ export default {
     const showAddModal = ref(false);
     const showEditModal = ref(false);
     const selectedInventory = ref(null);
+    const searchQuery = ref("");
 
     async function fetchInventories() {
       store.dispatch("fetchInventories");
+    }
+
+    const filteredInventories = computed(() => {
+      if (!searchQuery.value) {
+        return inventories.value;
+      }
+      return inventories.value.filter(
+        (inventory) =>
+          inventory.id.toString().includes(searchQuery.value) ||
+          inventory.capacity.toString().includes(searchQuery.value) ||
+          inventory.current_stock.toString().includes(searchQuery.value) ||
+          inventory.location.includes(searchQuery.value)
+      );
+    });
+
+    function handleSearch(query) {
+      searchQuery.value = query;
     }
 
     async function editInventory(inventory) {
@@ -80,12 +104,13 @@ export default {
     onMounted(fetchInventories);
 
     return {
-      inventories,
-      deleteInventory,
+      filteredInventories,
       editInventory,
+      deleteInventory,
       showAddModal,
       showEditModal,
       selectedInventory,
+      handleSearch,
     };
   },
 };

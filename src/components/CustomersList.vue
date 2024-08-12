@@ -1,6 +1,10 @@
 <template>
   <div>
     <h1>Customers</h1>
+
+    <!-- Search Bar Component -->
+    <SearchBar @search="handleSearch" />
+
     <button @click="showAddModal = true" class="add-button">
       Add Customer
     </button>
@@ -20,7 +24,7 @@
     />
 
     <ul>
-      <li v-for="customer in customers" :key="customer.id">
+      <li v-for="customer in filteredCustomers" :key="customer.id">
         <h2>{{ customer.name }}</h2>
         <p>
           <strong>Email:</strong> <br /><br />
@@ -49,11 +53,13 @@ import { ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import AddCustomerModal from "./AddCustomerModal.vue";
 import EditCustomerModal from "./EditCustomerModal.vue";
+import SearchBar from "./SearchBar.vue";
 
 export default {
   components: {
     AddCustomerModal,
     EditCustomerModal,
+    SearchBar,
   },
   setup() {
     const store = useStore();
@@ -62,9 +68,27 @@ export default {
     const showAddModal = ref(false);
     const showEditModal = ref(false);
     const selectedCustomer = ref(null);
+    const searchQuery = ref("");
 
     async function fetchCustomers() {
       store.dispatch("fetchCustomers");
+    }
+
+    const filteredCustomers = computed(() => {
+      if (!searchQuery.value) {
+        return customers.value;
+      }
+      return customers.value.filter(
+        (customer) =>
+          customer.name.includes(searchQuery.value) ||
+          customer.email.includes(searchQuery.value) ||
+          customer.phone.includes(searchQuery.value) ||
+          customer.address.includes(searchQuery.value)
+      );
+    });
+
+    function handleSearch(query) {
+      searchQuery.value = query;
     }
 
     async function editCustomer(customer) {
@@ -83,12 +107,13 @@ export default {
     onMounted(fetchCustomers);
 
     return {
-      customers,
-      deleteCustomer,
+      filteredCustomers,
       editCustomer,
+      deleteCustomer,
       showAddModal,
       showEditModal,
       selectedCustomer,
+      handleSearch,
     };
   },
 };

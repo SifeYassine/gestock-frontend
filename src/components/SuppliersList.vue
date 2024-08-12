@@ -1,6 +1,10 @@
 <template>
   <div>
     <h1>Suppliers</h1>
+
+    <!-- Search Bar Component -->
+    <SearchBar @search="handleSearch" />
+
     <button @click="showAddModal = true" class="add-button">
       Add Supplier
     </button>
@@ -20,7 +24,7 @@
     />
 
     <ul>
-      <li v-for="supplier in suppliers" :key="supplier.id">
+      <li v-for="supplier in filteredSuppliers" :key="supplier.id">
         <h2>{{ supplier.name }}</h2>
         <p><strong>Email:</strong> <br /><br />{{ supplier.email }}</p>
         <p><strong>Phone:</strong><br /><br />{{ supplier.phone }}</p>
@@ -43,11 +47,13 @@ import { ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import AddSupplierModal from "./AddSupplierModal.vue";
 import EditSupplierModal from "./EditSupplierModal.vue";
+import SearchBar from "./SearchBar.vue";
 
 export default {
   components: {
     AddSupplierModal,
     EditSupplierModal,
+    SearchBar,
   },
   setup() {
     const store = useStore();
@@ -56,9 +62,27 @@ export default {
     const showAddModal = ref(false);
     const showEditModal = ref(false);
     const selectedSupplier = ref(null);
+    const searchQuery = ref("");
 
     async function fetchSuppliers() {
       store.dispatch("fetchSuppliers");
+    }
+
+    const filteredSuppliers = computed(() => {
+      if (!searchQuery.value) {
+        return suppliers.value;
+      }
+      return suppliers.value.filter(
+        (supplier) =>
+          supplier.name.includes(searchQuery.value) ||
+          supplier.email.includes(searchQuery.value) ||
+          supplier.phone.includes(searchQuery.value) ||
+          supplier.address.includes(searchQuery.value)
+      );
+    });
+
+    function handleSearch(query) {
+      searchQuery.value = query;
     }
 
     async function editSupplier(supplier) {
@@ -77,12 +101,13 @@ export default {
     onMounted(fetchSuppliers);
 
     return {
-      suppliers,
-      deleteSupplier,
+      filteredSuppliers,
       editSupplier,
+      deleteSupplier,
       showAddModal,
       showEditModal,
       selectedSupplier,
+      handleSearch,
     };
   },
 };

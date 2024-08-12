@@ -1,6 +1,10 @@
 <template>
   <div>
     <h1>Categories</h1>
+
+    <!-- Search Bar Component -->
+    <SearchBar @search="handleSearch" />
+
     <button @click="showAddModal = true" class="add-button">
       Add Category
     </button>
@@ -16,7 +20,7 @@
     />
 
     <ul>
-      <li v-for="category in categories" :key="category.id">
+      <li v-for="category in filteredCategories" :key="category.id">
         <h2>{{ category.name }}</h2>
         <p>
           <strong>Description:</strong> <br /><br />
@@ -40,11 +44,13 @@ import { ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import AddCategoryModal from "./AddCategoryModal.vue";
 import EditCategoryModal from "./EditCategoryModal.vue";
+import SearchBar from "./SearchBar.vue";
 
 export default {
   components: {
     AddCategoryModal,
     EditCategoryModal,
+    SearchBar,
   },
   setup() {
     const store = useStore();
@@ -53,9 +59,25 @@ export default {
     const showAddModal = ref(false);
     const showEditModal = ref(false);
     const selectedCategory = ref(null);
+    const searchQuery = ref("");
 
     async function fetchCategories() {
       store.dispatch("fetchCategories");
+    }
+
+    const filteredCategories = computed(() => {
+      if (!searchQuery.value) {
+        return categories.value;
+      }
+      return categories.value.filter(
+        (category) =>
+          category.name.includes(searchQuery.value) ||
+          category.description.includes(searchQuery.value)
+      );
+    });
+
+    function handleSearch(query) {
+      searchQuery.value = query;
     }
 
     async function editCategory(category) {
@@ -74,12 +96,13 @@ export default {
     onMounted(fetchCategories);
 
     return {
-      categories,
+      filteredCategories,
       deleteCategory,
       editCategory,
       showAddModal,
       showEditModal,
       selectedCategory,
+      handleSearch,
     };
   },
 };
